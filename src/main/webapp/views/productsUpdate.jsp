@@ -73,7 +73,7 @@
 						</select>
 					</div>
 					<div class="form-group">
-						<label for="price">Price</label> 
+						<label for="price">Price (<c:out value="${storeCurrency}"/>)</label>
 						<input type="number" class="form-control border border-success" required name="price" value="${ product.price }" min="1" placeholder="Price">
 					</div>
 					<div class="form-group">

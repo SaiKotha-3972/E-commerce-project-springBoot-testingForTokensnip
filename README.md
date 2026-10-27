@@ -41,6 +41,7 @@ This project follows a layered MVC architecture and supports role-based access f
 - MySQL-backed persistence with DAO and service layers
 - Admin modules for products, categories, and customer listing
 - User modules for registration, login, profile management, and product browsing
+- Configurable store currency with ISO 4217 validation
 - Jenkins pipeline file included for CI/CD bootstrap
 
 ## Tech Stack
@@ -67,7 +68,7 @@ This project follows a layered MVC architecture and supports role-based access f
 
 ```text
 src/main/java/com/jtspringproject/JtSpringProject/
-  configuration/     # Security config
+  configuration/     # Security config, store currency config
   controller/        # MVC controllers
   dao/               # Data access layer
   models/            # Entities
@@ -112,6 +113,9 @@ hibernate.dialect=org.hibernate.dialect.MySQL5Dialect
 hibernate.show_sql=true
 hibernate.hbm2ddl.auto=update
 entitymanager.packagesToScan=com
+
+# Store currency configuration (optional, defaults to USD)
+store.currency=USD
 ```
 
 ### 3) Optional: seed sample data
@@ -128,6 +132,51 @@ mvn spring-boot:run
 ```
 
 App URL: http://localhost:8080/
+
+## Store Currency Configuration
+
+The application supports configurable store currency with ISO 4217 validation. Currency codes are displayed on all price fields across product listings, admin panels, and cart views.
+
+### Configuration
+
+Set the `store.currency` property in `application.properties`:
+
+```properties
+# Valid ISO 4217 currency codes (e.g., USD, EUR, GBP, JPY, INR, CAD, AUD, etc.)
+store.currency=USD
+```
+
+**Default:** `USD`
+
+Alternatively, use Spring's environment-variable override:
+
+```sh
+STORE_CURRENCY=EUR mvn spring-boot:run
+```
+
+Changing the label does not convert or rescale existing product prices. Only
+choose a code that matches the amounts already stored.
+
+### Validation
+
+- Currency codes must be valid ISO 4217 codes (case-sensitive: `USD`, not `usd`)
+- Invalid codes trigger an `IllegalArgumentException` at application startup with an explicit error message
+- `StoreCurrencyConfig` validates at startup; `StoreCurrencyAdvice` exposes `storeCurrency` to all view models
+
+### Display
+
+Currency codes appear escaped (XSS-safe) next to prices in:
+- Home-page product cards
+- Admin product list
+- Admin product add/update forms
+- User product list
+- Cart product list
+
+Example: `USD 19`
+
+### No Conversion
+
+This feature does **not** perform currency conversion. It is a label/display feature only. All prices remain stored as integers in the database without scaling or currency metadata.
 
 ## IDE Notes (IntelliJ)
 
@@ -170,6 +219,7 @@ mvn clean verify
 Notes:
 
 - `mvn test` requires a reachable database because context startup initializes Hibernate and datasource beans.
+- Run `mvn -B -Dtest=StoreCurrencyAdviceTest test` to test store currency configuration validation (no database required).
 
 ## CI/CD
 
@@ -186,6 +236,8 @@ Adjust branch, deployment steps, and credentials for your environment.
 
 - `Could not resolve placeholder 'db.driver'`:
   - Ensure all `db.*` keys exist in `application.properties`
+- `Invalid currency code configured`:
+  - Check `store.currency` is a valid ISO 4217 code (case-sensitive: `USD`, not `usd`)
 - JSP pages not rendering:
   - Verify working directory and `spring.mvc.view.prefix=/views/`
 - Tests failing on startup:

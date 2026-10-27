@@ -53,7 +53,7 @@
 				<th scope="col">Category</th>
 				<th scope="col">Preview</th>
 				<th scope="col">Quantity</th>
-				<th scope="col">Price</th>
+				<th scope="col">Price (<c:out value="${storeCurrency}"/>)</th>
 				<th scope="col">Weight</th>
 				<th scope="col">Descrption</th>
 				<th scope="col">Delete</th>
@@ -82,7 +82,7 @@
 					<td>
 						${product.quantity }
 					</td>
-					<td>S
+					<td><c:out value="${storeCurrency}"/>
 						${product.price }
 					</td>
 					<td>
